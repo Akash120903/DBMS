@@ -1,0 +1,68 @@
+create database demo2;
+use demo2;
+CREATE TABLE Emp1 (
+  emp_id INT PRIMARY KEY,
+  ename VARCHAR(50),
+  salary DECIMAL(10, 2),
+  did INT,
+  eid_of_manager INT
+  FOREIGN KEY (eid_of_manager) REFERENCES Emp(emp_id)
+ 
+);
+
+CREATE TABLE dept1 (
+  did INT PRIMARY KEY,
+  dname VARCHAR(50)
+);
+
+CREATE TABLE projects1 (
+  pid INT PRIMARY KEY,
+  eid INT
+);
+
+
+
+-- Insert sample values into the Emp table
+INSERT INTO Emp1 (emp_id, ename, salary, did, eid_of_manager)
+VALUES
+  (1, 'John Doe', 5000.00, 1, 3),
+  (2, 'Jane Smith', 7000.00, 1, 3),
+  (3, 'Michael Johnson', 6000.00, 1, 3),
+  (4, 'Emily Davis', 8000.00, 2, 1),
+  (5, 'Robert Brown', 5500.00, 2, 4);
+
+-- Insert sample values into the dept table
+INSERT INTO dept1 (did, dname)
+VALUES
+  (1, 'AIML'),
+  (2, 'CSE');
+
+-- Insert sample values into the projects table
+INSERT INTO projects1 (pid, eid)
+VALUES
+  (1, 1),
+  (2, 2),
+  (3, 3),
+  (4, 4);
+  
+SELECT COUNT(distinct emp1.eid_of_manager) AS num_managers
+FROM Emp1
+WHERE did = (SELECT did FROM dept1 WHERE dname = 'AIML') AND emp_id IN (SELECT eid FROM projects1);
+
+SELECT ename
+FROM Emp1
+WHERE did = (SELECT did FROM dept1 WHERE dname = 'CSE')
+  AND salary > (SELECT MAX(avg_salary) FROM (SELECT AVG(salary) AS avg_salary FROM Emp1 GROUP BY did) AS avg_salaries);
+
+
+SELECT dname
+FROM dept1
+WHERE did NOT IN (SELECT did FROM Emp1 WHERE emp_id IN (SELECT eid FROM projects1));
+
+SELECT ename
+FROM Emp1
+WHERE emp_id = eid_of_manager;
+
+SELECT ename
+FROM Emp1
+WHERE emp_id NOT IN (SELECT DISTINCT eid_of_manager FROM Emp1);

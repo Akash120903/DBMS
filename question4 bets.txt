@@ -1,0 +1,120 @@
+create database demo4;
+use demo4;
+-- Create sample tables
+CREATE TABLE player (
+  player_id INT PRIMARY KEY,
+  name VARCHAR(50),
+  game_account_balance DECIMAL(10, 2),
+  location_pincode INT
+ 
+);
+
+CREATE TABLE matches (
+  match_id INT PRIMARY KEY,
+  type_of_game VARCHAR(50),
+  location_pincode INT
+);
+
+CREATE TABLE transactions (
+  trans_id INT PRIMARY KEY,
+  player_id INT,
+  bet_amount DECIMAL(10, 2),
+  win_or_loss BOOLEAN
+);
+
+CREATE TABLE city (
+  pincode INT PRIMARY KEY,
+  name VARCHAR(50)
+);
+
+-- Insert sample values into the player table
+INSERT INTO player (player_id, name, game_account_balance, location_pincode)
+VALUES
+  (1, 'Player 1', 1000.00, 12345),
+  (2, 'Player 2', 500.00, 54321),
+  (3, 'Player 3', 1500.00, 67890),
+  (4, 'Player 4', 2000.00, 98765),
+  (5, 'Player 5', 800.00, 23456);
+
+-- Insert sample values into the matches table
+INSERT INTO matches (match_id, type_of_game, location_pincode)
+VALUES
+  (1, 'Football', 12345),
+  (2, 'Basketball', 54321),
+  (3, 'Cricket', 67890),
+  (4, 'Tennis', 98765),
+  (5, 'Golf', 23456);
+
+-- Insert sample values into the transactions table
+INSERT INTO transactions (trans_id, player_id, bet_amount, win_or_loss)
+VALUES
+  (1, 1, 100.00, true),
+  (2, 2, 50.00, false),
+  (3, 3, 200.00, false),
+  (4, 4, 150.00, true),
+  (5, 5, 80.00, true);
+
+-- Insert sample values into the city table
+INSERT INTO city (pincode, name)
+VALUES
+  (12345, 'City A'),
+  (54321, 'City B'),
+  (67890, 'City C'),
+  (98765, 'City D'),
+  (23456, 'City E');
+  
+SELECT name
+FROM player
+WHERE player_id = (
+    SELECT player_id
+    FROM transactions
+    WHERE win_or_loss = false
+    GROUP BY player_id
+    ORDER BY SUM(bet_amount) DESC
+    FETCH FIRST 1 ROWS ONLY
+);
+
+
+
+SELECT name
+FROM city
+WHERE pincode IN (
+    SELECT location_pincode
+    FROM player
+    WHERE player_id IN (
+        SELECT player_id
+        FROM transactions
+        GROUP BY player_id
+        HAVING AVG(bet_amount) = (
+            SELECT MAX(avg_bet_amount)
+            FROM (
+                SELECT AVG(bet_amount) AS avg_bet_amount
+                FROM transactions
+                GROUP BY player_id
+            ) AS avg_bets
+        )
+    )
+);
+
+
+SELECT type_of_game
+FROM matches
+WHERE match_id = (
+    SELECT match_id
+    FROM transactions
+    GROUP BY match_id
+    ORDER BY COUNT(*) ASC
+    FETCH FIRST 1 ROWS ONLY
+);
+
+
+SELECT name
+FROM city
+WHERE pincode NOT IN (
+    SELECT location_pincode
+    FROM player
+    WHERE player_id IN (
+        SELECT player_id
+        FROM transactions
+    )
+);
